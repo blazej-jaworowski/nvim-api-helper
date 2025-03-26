@@ -1,0 +1,10 @@
+[package]
+name = "nvim-api-helper"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+
+[dependencies]
+nvim-oxi = { version = "0.5.1", features = ["libuv", "mlua", "neovim-0-10"] }
+thiserror = "2.0.11"
