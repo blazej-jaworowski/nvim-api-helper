@@ -1,10 +1,18 @@
 use thiserror::Error;
-use std::result::Result as StdResult;
-use std::io::Error as IOError;
-use crate::nvim::Error as NvimError;
-use crate::nvim::api::Error as NvimApiError;
-use crate::mlua::prelude::LuaError;
-use crate::nvim::libuv::Error as LibUVError;
+use std::{
+    result::Result as StdResult,
+    io::Error as IOError,
+};
+use crate::{
+    nvim::{
+        Error as NvimError,
+        api::Error as NvimApiError,
+        libuv::Error as LibUVError,
+    },
+    mlua::prelude::LuaError,
+    async_utils::AsyncError,
+};
+
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -12,22 +20,22 @@ pub enum Error {
     InvalidType,
 
     #[error("Nvim error: {0}")]
-    NvimError(#[from] NvimError),
+    Nvim(#[from] NvimError),
 
     #[error("NvimApi error: {0}")]
-    NvimApiError(#[from] NvimApiError),
+    NvimApi(#[from] NvimApiError),
 
     #[error("Lua error: {0}")]
-    LuaError(#[from] LuaError),
+    Lua(#[from] LuaError),
 
     #[error("IO error: {0}")]
-    IOError(#[from] IOError),
+    IO(#[from] IOError),
 
     #[error("LibUV error: {0}")]
-    LibUVError(#[from] LibUVError),
+    LibUV(#[from] LibUVError),
 
-    #[error("Other error: {0}")]
-    Other(String),
+    #[error("Async error: {0}")]
+    Async(#[from] AsyncError),
 }
 
 pub type Result<R> = StdResult<R, Error>;
