@@ -1,7 +1,8 @@
 use std::{
     sync::{Mutex, Arc, OnceLock},
-    cell::{RefCell, OnceCell},
+    cell::RefCell,
 };
+use futures::channel::oneshot;
 
 use crate::{
     Result,
@@ -11,68 +12,66 @@ use crate::{
 
 #[derive(thiserror::Error, Debug)]
 pub enum AsyncError {
+    #[error("OneshotCanceled error: {0}")]
+    OneshotCanceled(#[from] oneshot::Canceled),
+
     #[error("Dispatcher lock poisoned")]
     LockPoisoned,
 
     #[error("Static dispatcher not initialized")]
     NoDispatcher,
+
+    #[error("Dispatcher async handle not set")]
+    NoAsyncHandle,
 }
 
+type DispatcherFunc = Option<Box<dyn FnOnce() + Send>>;
 
-struct InnerDispatcher {
-    async_handle: OnceCell<AsyncHandle>,
-    func: RefCell<Option<Box<dyn Fn() + Send>>>,
-}
-
-impl InnerDispatcher {
-
-    // Must be called from nvim thread
-    fn call_func(&self) {
-        self.func.borrow().as_ref().expect("Dispatcher called with no func")()
-    }
-
-    // Can be called from anywhere
-    pub fn dispatch(&self, func: Box<dyn Fn() + Send>) -> Result<()> {
-        *self.func.borrow_mut() = Some(func);
-        Ok(
-            self.async_handle.get().expect("Async handle not set")
-                .send()?
-        )
-    }
-
-}
-
-#[derive(Clone)]
 pub struct Dispatcher {
-    inner: Arc<Mutex<InnerDispatcher>>,
+    async_handle: AsyncHandle,
+    func: Arc<Mutex<RefCell<DispatcherFunc>>>,
+    dispatch_lock: futures::lock::Mutex<()>,
 }
 
 impl Dispatcher {
 
     pub fn new() -> Result<Dispatcher> {
-        let inner = Arc::new(Mutex::new(InnerDispatcher {
-            async_handle: OnceCell::new(),
-            func: RefCell::new(None),
-        }));
+        let func: Arc<Mutex<RefCell<DispatcherFunc>>> = Default::default();
 
-        let cloned_inner = inner.clone();
+        let func_clone = func.clone();
         let async_handle = AsyncHandle::new(move || {
-            cloned_inner.lock()
-                .map_err(|_| AsyncError::LockPoisoned).unwrap()
-                .call_func();
+            let func_guard = func_clone.lock()
+                .expect("Dispatcher lock poisoned");
+            let func = func_guard.take();
+
+            func.expect("Dispatcher called with no function")();
         })?;
 
-        _ = inner.lock()
-            .map_err(|_| AsyncError::LockPoisoned)?
-            .async_handle.set(async_handle);
-
-        Ok(Dispatcher { inner })
+        Ok(Dispatcher {
+            async_handle, func,
+            dispatch_lock: Default::default(),
+        })
     }
 
-    pub fn dispatch(&self, func: Box<dyn Fn() + Send>) -> Result<()> {
-        self.inner.lock()
-            .map_err(|_| AsyncError::LockPoisoned)?
-            .dispatch(func)
+    pub async fn dispatch<R: Send + 'static>(&self, func: Box<dyn FnOnce() -> R + Send>) -> Result<R> {
+        let (tx, rx) = oneshot::channel::<R>();
+
+        let _dispatch_guard = self.dispatch_lock.lock().await;
+
+        {
+            let func_guard = self.func.lock()
+                .map_err(|_| AsyncError::LockPoisoned)?;
+
+            *func_guard.borrow_mut() = Some(Box::new(move || {
+                _ = tx.send(func());
+            }));
+        }
+
+        self.async_handle.send()?;
+
+        let result = rx.await.map_err(AsyncError::OneshotCanceled)?;
+
+        Ok(result)
     }
 
 }
@@ -86,10 +85,11 @@ pub fn init_static_dispatcher() -> Result<()> {
     Ok(())
 }
 
-pub fn static_dispatch(func: Box<dyn Fn() + Send>) -> Result<()> {
+pub async fn static_dispatch<R: Send + 'static>(func: Box<dyn FnOnce() -> R + Send>) -> Result<R> {
     let dispatcher = STATIC_DISPATCHER.get()
         .ok_or(AsyncError::NoDispatcher)?;
-    dispatcher.dispatch(func)
+
+    dispatcher.dispatch(func).await
 }
 
 #[macro_export]

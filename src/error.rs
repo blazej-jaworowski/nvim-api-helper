@@ -11,6 +11,7 @@ use crate::{
     },
     mlua::prelude::LuaError,
     async_utils::AsyncError,
+    buffer::BufferError,
 };
 
 
@@ -36,6 +37,9 @@ pub enum Error {
 
     #[error("Async error: {0}")]
     Async(#[from] AsyncError),
+
+    #[error("Buffer error: {0}")]
+    Buffer(#[from] BufferError),
 }
 
 pub type Result<R> = StdResult<R, Error>;

@@ -6,5 +6,10 @@ edition = "2021"
 [lib]
 
 [dependencies]
-nvim-oxi = { version = "0.5.1", features = ["libuv", "mlua", "neovim-0-10"] }
+futures = "0.3.31"
+itertools = "0.14.0"
+nvim-oxi = { version = "0.5.1", features = ["libuv", "mlua", "neovim-0-10", "test"] }
 thiserror = "2.0.11"
+
+[dev-dependencies]
+nvim-tests = { path = "nvim-tests" }
