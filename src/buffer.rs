@@ -111,9 +111,7 @@ impl BufferUtils for Buffer {
             return Err(Error::from(BufferError::ColOutOfBounds(col, max_col)));
         }
 
-        if col > 0 {
-            col -= 1;
-        }
+        col = col.saturating_sub(1);
 
         Ok(window.set_cursor(row + 1, col)?)
     }
@@ -137,9 +135,7 @@ impl BufferUtils for Buffer {
             return Err(Error::from(BufferError::ColOutOfBounds(col, max_col)));
         }
 
-        if col > 0 {
-            col -= 1;
-        }
+        col = col.saturating_sub(1);
 
         self.set_text(row..row, col, col, text.split("\n"))?;
 

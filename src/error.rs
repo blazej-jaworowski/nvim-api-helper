@@ -1,17 +1,8 @@
 use thiserror::Error;
-use std::{
-    result::Result as StdResult,
-    io::Error as IOError,
-};
 use crate::{
-    nvim::{
-        Error as NvimError,
-        api::Error as NvimApiError,
-        libuv::Error as LibUVError,
-    },
-    mlua::prelude::LuaError,
-    async_utils::AsyncError,
-    buffer::BufferError,
+    nvim,
+    async_utils,
+    buffer,
 };
 
 
@@ -21,25 +12,28 @@ pub enum Error {
     InvalidType,
 
     #[error("Nvim error: {0}")]
-    Nvim(#[from] NvimError),
+    Nvim(#[from] nvim::Error),
 
     #[error("NvimApi error: {0}")]
-    NvimApi(#[from] NvimApiError),
+    NvimApi(#[from] nvim::api::Error),
 
     #[error("Lua error: {0}")]
-    Lua(#[from] LuaError),
+    Lua(#[from] nvim::mlua::Error),
 
     #[error("IO error: {0}")]
-    IO(#[from] IOError),
+    IO(#[from] std::io::Error),
 
     #[error("LibUV error: {0}")]
-    LibUV(#[from] LibUVError),
+    LibUV(#[from] nvim::libuv::Error),
 
     #[error("Async error: {0}")]
-    Async(#[from] AsyncError),
+    Async(#[from] async_utils::Error),
 
     #[error("Buffer error: {0}")]
-    Buffer(#[from] BufferError),
+    Buffer(#[from] buffer::BufferError),
+
+    #[error("Error: {0}")]
+    Custom(String),
 }
 
-pub type Result<R> = StdResult<R, Error>;
+pub type Result<R> = std::result::Result<R, Error>;

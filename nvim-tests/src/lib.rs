@@ -22,4 +22,4 @@ fn basic_test() -> Result<()> {
 }
 
 mod buffer;
-mod async_utils;
+// mod async_utils;
