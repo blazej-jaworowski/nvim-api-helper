@@ -3,6 +3,7 @@ pub mod lua;
 pub mod lua_plugins;
 pub mod buffer;
 pub mod async_utils;
+pub mod logging;
 
 pub use nvim_oxi as nvim;
 pub use nvim::mlua as mlua;
