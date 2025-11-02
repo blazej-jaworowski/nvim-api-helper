@@ -1,8 +1,6 @@
 use thiserror::Error;
 use crate::{
-    nvim,
-    async_utils,
-    buffer,
+    async_dispatch, buffer, nvim
 };
 
 
@@ -26,8 +24,8 @@ pub enum Error {
     #[error("LibUV error: {0}")]
     LibUV(#[from] nvim::libuv::Error),
 
-    #[error("Async error: {0}")]
-    Async(#[from] async_utils::Error),
+    #[error("AsyncDispatch error: {0}")]
+    AsyncDispatch(#[from] async_dispatch::Error),
 
     #[error("Buffer error: {0}")]
     Buffer(#[from] buffer::BufferError),
