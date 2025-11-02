@@ -1,10 +1,5 @@
-use crate::{Result, Error};
-use crate::mlua::{
-    self,
-    Value,
-    FromLua,
-};
-
+use crate::mlua::{self, FromLua, Value};
+use crate::{Error, Result};
 
 #[macro_export]
 macro_rules! lua_tuple {
@@ -76,8 +71,7 @@ macro_rules! lua_value {
     }};
 }
 
-pub fn lua_get_value_path<'lua, T: FromLua<'lua>>(obj: Value<'lua>, path: &str) -> Result<T>
-{
+pub fn lua_get_value_path<T: FromLua>(obj: Value, path: &str) -> Result<T> {
     let mut table = if let Value::Table(t) = obj {
         t
     } else {
@@ -95,7 +89,7 @@ pub fn lua_get_value_path<'lua, T: FromLua<'lua>>(obj: Value<'lua>, path: &str) 
     Ok(table.get(part)?)
 }
 
-pub fn lua_get_global_path<'lua, T: FromLua<'lua>>(path: &str) -> Result<T> {
+pub fn lua_get_global_path<T: FromLua>(path: &str) -> Result<T> {
     let globals = Value::Table(mlua::lua().globals());
     lua_get_value_path(globals, path)
 }

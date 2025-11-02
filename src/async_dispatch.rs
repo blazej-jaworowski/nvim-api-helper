@@ -100,7 +100,7 @@ where
 #[macro_export]
 macro_rules! async_dispatch {
     ($( $tt:tt )*) => {
-        $crate::async_utils::async_dispatch(move || {
+        $crate::async_dispatch::async_dispatch(move || {
             $( $tt )*
         })
     };

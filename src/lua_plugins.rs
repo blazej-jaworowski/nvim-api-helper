@@ -1,30 +1,24 @@
-use crate::{
-    Result,
-    lua::lua_get_global_path,
-};
-use crate::mlua::{
-    Function, Table,
-    IntoLuaMulti, FromLuaMulti,
-};
+use crate::mlua::{FromLuaMulti, Function, IntoLuaMulti, Table};
+use crate::{Result, lua::lua_get_global_path};
 
-pub fn require_plugin<'lua>(plugin_name: &str) -> Result<Table<'lua>> {
+pub fn require_plugin(plugin_name: &str) -> Result<Table> {
     let require_func: Function = lua_get_global_path("require")?;
     Ok(require_func.call(plugin_name)?)
 }
 
-pub fn require_call_setup_val<'lua, A, R>(plugin_name: &str, args: A) -> Result<R>
+pub fn require_call_setup_val<A, R>(plugin_name: &str, args: A) -> Result<R>
 where
-    A: IntoLuaMulti<'lua>,
-    R: FromLuaMulti<'lua>,
+    A: IntoLuaMulti,
+    R: FromLuaMulti,
 {
     Ok(require_plugin(plugin_name)?
-        .get::<&str, Function>("setup")?
+        .get::<Function>("setup")?
         .call(args)?)
 }
 
-pub fn require_call_setup<'lua, A>(plugin_name: &str, args: A) -> Result<()>
+pub fn require_call_setup<A>(plugin_name: &str, args: A) -> Result<()>
 where
-    A: IntoLuaMulti<'lua>,
+    A: IntoLuaMulti,
 {
     require_call_setup_val(plugin_name, args)
 }

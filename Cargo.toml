@@ -4,12 +4,17 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
+name = "nvim_api_helper"
+crate-type = ["cdylib"]
 
 [dependencies]
 itertools = "0.14.0"
-nvim-oxi = { version = "0.5.1", features = ["libuv", "mlua", "neovim-0-10", "test"] }
+nvim-oxi = { version = "0.6.0", features = ["libuv", "mlua", "neovim-0-11", "test"] }
 thiserror = "2.0.11"
 tokio = { version = "1.44.2", features = ["full"] }
 
-[dev-dependencies]
-nvim-tests = { path = "nvim-tests" }
+[build-dependencies]
+nvim-oxi = { version = "0.6.0", features = ["neovim-0-11", "test"] }
+
+[features]
+nvim_tests = []
