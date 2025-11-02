@@ -1,8 +1,5 @@
+use crate::{async_dispatch, async_runtime, buffer, nvim};
 use thiserror::Error;
-use crate::{
-    async_dispatch, buffer, nvim
-};
-
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -26,6 +23,9 @@ pub enum Error {
 
     #[error("AsyncDispatch error: {0}")]
     AsyncDispatch(#[from] async_dispatch::Error),
+
+    #[error("AsyncRuntime error: {0}")]
+    AsyncRuntime(#[from] async_runtime::Error),
 
     #[error("Buffer error: {0}")]
     Buffer(#[from] buffer::BufferError),

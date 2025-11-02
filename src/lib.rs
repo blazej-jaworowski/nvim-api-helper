@@ -1,11 +1,15 @@
 pub mod error;
-pub mod lua;
-pub mod lua_plugins;
-pub mod buffer;
-pub mod async_dispatch;
 pub mod logging;
 
-pub use nvim_oxi as nvim;
-pub use nvim::mlua as mlua;
+pub mod async_dispatch;
+pub mod async_runtime;
 
-pub use error::{Result, Error};
+pub mod buffer;
+
+pub mod lua;
+pub mod lua_plugins;
+
+pub use nvim::mlua;
+pub use nvim_oxi as nvim;
+
+pub use error::{Error, Result};
