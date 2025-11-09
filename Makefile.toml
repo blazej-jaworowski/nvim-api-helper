@@ -1,0 +1,5 @@
+[tasks.nvim-cov]
+env = { "LLVM_COV_FLAGS" = "-object target/nvim_oxi_tests/nvim-api-helper/debug/libnvim_api_helper.so" }
+
+command = "cargo"
+args = ["llvm-cov", "test", "--features", "nvim_tests", "--html"]
